@@ -6,7 +6,9 @@ public class NeuralNetworksProject {
     public static void main(String [] args){
 
         //Number of input neurons, hidden layers
-        int inputsCount = 784;
+        int inputDimensions = 784;
+        int trainImagesCount = 60000;
+        int testImagesCount = 10000;
         int hiddenLayersCount = 2;
 
         //How many epochs
@@ -19,13 +21,14 @@ public class NeuralNetworksProject {
 
 
         //Create the network
-        Network Net = new Network(inputsCount, hiddenLayersCount, hiddenLayersNeuronCount);
+        Network Net = new Network(inputDimensions, trainImagesCount, testImagesCount, hiddenLayersCount, hiddenLayersNeuronCount);
 
 
         //Read and pre-process the inputs, includes one hot mapping
         Net.readMnist();
         //Pre-processing
         Net.maxValueNormalization();
+        //Net.zScoreNormalization();
 
 
         //Add cycle here
@@ -59,11 +62,11 @@ public class NeuralNetworksProject {
             sum += Net.getOutputLayer().getOutputs()[i];
         }
         System.out.println(sum);
-*/
+
         for(int i = 0; i < Net.getTrainImages()[8].length; i++){
             System.out.println("i: " + i + " " + Net.getTrainImages()[8][i]);
         }
-/*
+
         System.out.println(Net.getTrainImages().length);
         System.out.println(Net.getTestImages().length);
 
@@ -79,10 +82,11 @@ public class NeuralNetworksProject {
         System.out.println(Net.getTestLabelsOneHot().length);
         System.out.println(Net.getTrainLabelsOneHot().length);
         System.out.println(Net.getTestLabelsOneHot()[2].length);
-
+        
         for(int i = 0; i < Net.getTrainLabelsOneHot()[2].length; i++){
             System.out.println(Net.getTrainLabelsOneHot()[2][i]);
         }
+
         System.out.println();
         for(int i = 0; i < Net.getTrainLabelsOneHot()[1].length; i++){
             System.out.println(Net.getTrainLabelsOneHot()[1][i]);

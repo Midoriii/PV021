@@ -20,25 +20,35 @@ public class Network {
     private ArrayList<Layer> hiddenLayers = new ArrayList<Layer>();
     private Layer outputLayer;
 
-    private double[][] trainImages = new double[60000][784];
-    private double[][] testImages = new double[10000][784];
-    private int[] trainLabels = new int[60000];
-    private int[] testLabels = new int[10000];
-    private int[][] trainLabelsOneHot = new int[60000][10];
-    private int[][] testLabelsOneHot = new int[10000][10];
+    private double[][] trainImages;
+    private double[][] testImages;
+    private int[] trainLabels;
+    private int[] testLabels;
+    private int[][] trainLabelsOneHot;
+    private int[][] testLabelsOneHot;
 
-    private int[] trainPredictions = new int[60000];
-    private int[] testPredictions = new int[10000];
+    private int[] trainPredictions;
+    private int[] testPredictions;
 
 
     //Init layers in constructor
-    public Network(int inputLayerInputs, int hiddenLayersCount, ArrayList<Integer> hiddenLayersNeuronCount){
+    public Network(int inputDimensions, int trainImagesCount, int testImagesCount, int hiddenLayersCount, ArrayList<Integer> hiddenLayersNeuronCount){
+        trainImages = new double[trainImagesCount][inputDimensions];
+        testImages = new double[testImagesCount][inputDimensions];
+        trainLabels = new int[trainImagesCount];
+        testLabels = new int[testImagesCount];
+        trainLabelsOneHot = new int[trainImagesCount][categories];
+        testLabelsOneHot = new int[testImagesCount][categories];
+
+        trainPredictions = new int[trainImagesCount];
+        testPredictions = new int[testImagesCount];
+
         //Create desired layers
-        inputLayer = new Layer(1, inputLayerInputs);
+        inputLayer = new Layer(1, inputDimensions);
         for(int i = 0; i < hiddenLayersCount; i++){
             //First hidden layer has the weights number equal to the neurons in input layer
             if(i == 0){
-                hiddenLayers.add(new Layer(inputLayerInputs, hiddenLayersNeuronCount.get(i)));
+                hiddenLayers.add(new Layer(inputDimensions, hiddenLayersNeuronCount.get(i)));
             }
             else{
                 hiddenLayers.add(new Layer(hiddenLayersNeuronCount.get(i-1), hiddenLayersNeuronCount.get(i)));
@@ -104,10 +114,10 @@ public class Network {
         String cvsSplitBy = ",";
         double[][] vector;
         if(type != "test"){
-            vector = new double[60000][784];
+            vector = new double[trainImages.length][trainImages[0].length];
         }
         else{
-            vector = new double[10000][784];
+            vector = new double[testImages.length][testImages[0].length];
         }
 
         //Get file from resources folder
@@ -142,10 +152,10 @@ public class Network {
         String line;
         int[] vector;
         if(type != "test"){
-            vector = new int[60000];
+            vector = new int[trainImages.length];
         }
         else{
-            vector = new int[10000];
+            vector = new int[testImages.length];
         }
 
         //Get file from resources folder
@@ -174,10 +184,10 @@ public class Network {
     private int[][] mapOneHotLabels(int[] labels, String type){
         int[][] oneHot;
         if(type != "test"){
-            oneHot = new int [60000][10];
+            oneHot = new int [trainImages.length][categories];
         }
         else{
-            oneHot = new int [10000][10];
+            oneHot = new int [testImages.length][categories];
         }
 
         for(int i = 0; i < labels.length; i++){
@@ -197,6 +207,68 @@ public class Network {
         for(int i = 0; i < testImages.length; i++){
             for(int j = 0; j < testImages[i].length; j++){
                 testImages[i][j] = testImages[i][j] / 255.0;
+            }
+        }
+    }
+
+    //Z-score normalization
+    public void zScoreNormalization(){
+
+        //Compute all the neccessary stuff for one image
+        for(int i = 0; i < trainImages.length; i++){
+            double average = 0.0;
+            double sum = 0.0;
+            double deviation = 0.0;
+
+            //Get the sum for average
+            for (int j = 0; j < trainImages[i].length; j++){
+                sum += trainImages[i][j];
+            }
+            //Get the average
+            average = sum / (double) trainImages[i].length;
+
+            sum = 0.0;
+
+            //Get the sum for deviation
+            for (int j = 0; j < trainImages[i].length; j++){
+                sum += Math.pow((trainImages[i][j] - average), 2.0);
+            }
+
+            //Get the deviation
+            deviation = Math.sqrt((1.0/((double) trainImages[i].length - 1.0))* sum);
+
+            //Compute the normalization
+            for(int j = 0; j < trainImages[i].length; j++){
+                trainImages[i][j] = (trainImages[i][j] - average) / deviation;
+            }
+        }
+
+        //Compute all the neccessary stuff for one image
+        for(int i = 0; i < testImages.length; i++){
+            double average = 0.0;
+            double sum = 0.0;
+            double deviation = 0.0;
+
+            //Get the sum for average
+            for (int j = 0; j < testImages[i].length; j++){
+                sum += testImages[i][j];
+            }
+            //Get the average
+            average = sum / (double) testImages[i].length;
+
+            sum = 0.0;
+
+            //Get the sum for deviation
+            for (int j = 0; j < testImages[i].length; j++){
+                sum += Math.pow((testImages[i][j] - average), 2.0);
+            }
+
+            //Get the deviation
+            deviation = Math.sqrt((1.0/((double) testImages[i].length - 1.0))* sum);
+
+            //Compute the normalization
+            for(int j = 0; j < testImages[i].length; j++){
+                testImages[i][j] = (testImages[i][j] - average) / deviation;
             }
         }
     }
