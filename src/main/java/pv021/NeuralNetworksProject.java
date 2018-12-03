@@ -12,7 +12,7 @@ public class NeuralNetworksProject {
         int hiddenLayersCount = 2;
 
         //How many epochs
-        int epochs = 20;
+        int epochs = 4;
 
         //Numbers of neurons in each hidden layer
         ArrayList<Integer> hiddenLayersNeuronCount = new ArrayList<Integer>();
@@ -30,7 +30,6 @@ public class NeuralNetworksProject {
         //Pre-processing
         Net.maxValueNormalization();
         //Net.zScoreNormalization();
-
 
         //One epoch cycle, with test predictions at the end and accuracy report
         for(int i = 0; i < epochs; i++){

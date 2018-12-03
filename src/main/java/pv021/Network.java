@@ -17,9 +17,9 @@ import java.util.Scanner;
 public class Network {
 
     //Hyper-parameters
-    private double momentum = 0.7;
+    private double momentum = 0.9;
     private double decayRate = 0.0005;
-    private double learningRate = 0.01;
+    private double learningRate = 0.001;
 
     private int categories = 10; //2
 
@@ -89,6 +89,12 @@ public class Network {
             //Update weights
             updateWeights();
             //Keep a record of predictions
+
+            /*
+            for(int l = 0; l < outputLayer.getOutputs().length; l++){
+                System.out.println("Output " + l + ": " + outputLayer.getOutputs()[l]);
+            }*/
+
             trainPredictions[i] = getPredictedLabel();
         }
     }
@@ -369,16 +375,16 @@ public class Network {
     public void backprop(int imageNumber){
         //for each output neuron i
         for(int i = 0; i < outputLayer.getNeurons().size(); i++){
-            //derivative = softmax_i - true_one_hot_i
+            //derivative = (softmax_i - true_one_hot_i) * softmax_i * (1 - softmax_i)
             outputLayer.getDerivatives()[i] = (outputLayer.getOutputs()[i] - (double) trainLabelsOneHot[imageNumber][i]) * outputLayer.getOutputs()[i] * (1.0 - outputLayer.getOutputs()[i]);
             //for each his weight n (for weight_0 input is 1.0)
             for(int n = 0; n < outputLayer.getNeurons().get(i).getWeights().length; n++){
-                //delta weight = derivative * input_n * learning_rate
+                //delta weight = derivative * input_n
                 if(n == 0){
-                    outputLayer.getNeurons().get(i).getDeltaWeights()[n] = outputLayer.getDerivatives()[i] * learningRate * 1.0;
+                    outputLayer.getNeurons().get(i).getDeltaWeights()[n] = outputLayer.getDerivatives()[i] * 1.0;
                 }
                 else{
-                    outputLayer.getNeurons().get(i).getDeltaWeights()[n] = outputLayer.getDerivatives()[i] * learningRate * outputLayer.getInputs()[n-1];
+                    outputLayer.getNeurons().get(i).getDeltaWeights()[n] = outputLayer.getDerivatives()[i] * outputLayer.getInputs()[n-1];
                 }
             }
         }
@@ -392,13 +398,13 @@ public class Network {
                 if(l == hiddenLayers.size() - 1){
                     //prev_derivatives_sum += prev_layer_derivative * j's_weight_i+1
                     for(int j = 0; j < outputLayer.getNeurons().size(); j++){
-                        derivatives_sum += outputLayer.getDerivatives()[j] * outputLayer.getNeurons().get(j).getWeights()[i+1];
+                        derivatives_sum += (outputLayer.getDerivatives()[j] * outputLayer.getNeurons().get(j).getWeights()[i+1]);
                     }
                 }
                 else{
                     //prev_derivatives_sum += prev_layer_derivative * j's_weight_i+1
                     for(int j = 0; j < hiddenLayers.get(l + 1).getNeurons().size(); j++){
-                        derivatives_sum += hiddenLayers.get(l + 1).getDerivatives()[j] * hiddenLayers.get(l + 1).getNeurons().get(j).getWeights()[i+1];
+                        derivatives_sum += (hiddenLayers.get(l + 1).getDerivatives()[j] * hiddenLayers.get(l + 1).getNeurons().get(j).getWeights()[i+1]);
                     }
                 }
                 //derivative = prev_derivatives_sum * act_function_derivative
