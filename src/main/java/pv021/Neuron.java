@@ -17,7 +17,7 @@ public class Neuron {
 
     private double output;
     private double innerPotential;
-    private double leakyReluCoef = 100.0;
+    private double leakyReluCoef = 20.0;
 
 
     //Create proper number of weights, +1 is the bias, every input will have index 0 of value 1.0

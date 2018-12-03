@@ -6,18 +6,19 @@ public class NeuralNetworksProject {
     public static void main(String [] args){
 
         //Number of input neurons, hidden layers
-        int inputDimensions = 784;
-        int trainImagesCount = 60000;
-        int testImagesCount = 10000;
+        int inputDimensions = 784; //2
+        int trainImagesCount = 60000; //4
+        int testImagesCount = 10000; //4
         int hiddenLayersCount = 2;
 
         //How many epochs
-        int epochs = 24;
+        int epochs = 20;
 
         //Numbers of neurons in each hidden layer
         ArrayList<Integer> hiddenLayersNeuronCount = new ArrayList<Integer>();
-        hiddenLayersNeuronCount.add(24);
-        hiddenLayersNeuronCount.add(36);
+        hiddenLayersNeuronCount.add(40);
+        hiddenLayersNeuronCount.add(60);
+
 
 
         //Create the network
@@ -31,9 +32,18 @@ public class NeuralNetworksProject {
         //Net.zScoreNormalization();
 
 
-        //Add cycle here
-        //Compute the forward pass
-        Net.forwardPass();
+        //One epoch cycle, with test predictions at the end and accuracy report
+        for(int i = 0; i < epochs; i++){
+            Net.train();
+
+            Net.predict();
+
+            Net.printPredictions();
+
+            Net.printPercentages();
+
+            //Add loss output
+        }
 
 
 
@@ -63,6 +73,7 @@ public class NeuralNetworksProject {
         }
         System.out.println(sum);
 
+
         for(int i = 0; i < Net.getTrainImages()[8].length; i++){
             System.out.println("i: " + i + " " + Net.getTrainImages()[8][i]);
         }
@@ -82,7 +93,7 @@ public class NeuralNetworksProject {
         System.out.println(Net.getTestLabelsOneHot().length);
         System.out.println(Net.getTrainLabelsOneHot().length);
         System.out.println(Net.getTestLabelsOneHot()[2].length);
-        
+
         for(int i = 0; i < Net.getTrainLabelsOneHot()[2].length; i++){
             System.out.println(Net.getTrainLabelsOneHot()[2][i]);
         }

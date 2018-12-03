@@ -11,12 +11,14 @@ public class Layer {
 
     private double[] inputs;
     private double[] outputs;
+    private double[] derivatives;
     private ArrayList<Neuron> neurons = new ArrayList<Neuron>();
 
 
     public Layer(int prevLayerNeuronsCount, int neuronCount){
         inputs = new double[prevLayerNeuronsCount];
         outputs = new double[neuronCount];
+        derivatives = new double[neuronCount];
 
         for(int i = 0; i < neuronCount; i++){
             neurons.add(new Neuron(prevLayerNeuronsCount));
