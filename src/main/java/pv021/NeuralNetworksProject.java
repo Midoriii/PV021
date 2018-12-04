@@ -16,8 +16,8 @@ public class NeuralNetworksProject {
 
         //Numbers of neurons in each hidden layer
         ArrayList<Integer> hiddenLayersNeuronCount = new ArrayList<Integer>();
-        hiddenLayersNeuronCount.add(40);
-        hiddenLayersNeuronCount.add(60);
+        hiddenLayersNeuronCount.add(80);
+        hiddenLayersNeuronCount.add(90);
 
 
 

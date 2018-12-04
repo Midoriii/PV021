@@ -60,7 +60,7 @@ public class Neuron {
 
     //Derivation of leaky Relu
     public double reluPrime(){
-        if(innerPotential > 0){
+        if(innerPotential > 0.0){
             return 1.0;
         }
         else{

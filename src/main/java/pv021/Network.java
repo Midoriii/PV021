@@ -39,6 +39,7 @@ public class Network {
     private int[] testPredictions;
 
     double loss;
+    double loss_sum;
 
 
     //Init layers and arrays in constructor
@@ -77,6 +78,7 @@ public class Network {
 
     //Training loop, might add batches TODO
     public void train(){
+        loss_sum = 0.0;
         for(int i = 0; i < trainImages.length; i++){
             //Feed input to the input layer
             getInput(i, "train");
@@ -84,6 +86,9 @@ public class Network {
             forwardPass();
             //Calculate error
             calculateError(i);
+
+            loss_sum += loss;
+
             //Backpropagate the error
             backprop(i);
             //Update weights
@@ -91,12 +96,16 @@ public class Network {
             //Keep a record of predictions
 
             /*
-            for(int l = 0; l < outputLayer.getOutputs().length; l++){
-                System.out.println("Output " + l + ": " + outputLayer.getOutputs()[l]);
+            if(i == 0){
+                for(int l = 0; l < outputLayer.getOutputs().length; l++){
+                    System.out.println("Output " + l + ": " + outputLayer.getOutputs()[l]);
+                }
             }*/
+
 
             trainPredictions[i] = getPredictedLabel();
         }
+        System.out.println("loss: " + loss_sum / trainImages.length);
     }
 
     //Prediction loop, implicitly predicts on the whole test set TODO
@@ -148,11 +157,12 @@ public class Network {
         //Inputs of the input layer are its own input
         if(test.equals("test")){
             inputLayer.setInputs(testImages[imageNumber]);
+            inputLayer.setOutputs(testImages[imageNumber]);
         }
         else{
             inputLayer.setInputs(trainImages[imageNumber]);
+            inputLayer.setOutputs(trainImages[imageNumber]);
         }
-        inputLayer.setOutputs(inputLayer.getInputs());
     }
 
     //Read train and test image vectors and labels //FIX

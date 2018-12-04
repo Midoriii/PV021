@@ -1,0 +1,3 @@
+module add maven
+mvn clean install 
+mvn exec:java -Dexec.mainClass="pv021.NeuralNetworksProject"
