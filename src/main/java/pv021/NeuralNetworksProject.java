@@ -12,7 +12,7 @@ public class NeuralNetworksProject {
         int hiddenLayersCount = 2;
 
         //How many epochs
-        int epochs = 4;
+        int epochs = 10;
 
         //Numbers of neurons in each hidden layer
         ArrayList<Integer> hiddenLayersNeuronCount = new ArrayList<Integer>();

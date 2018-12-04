@@ -34,13 +34,13 @@ public class Neuron {
     //Get the inner potential of this neuron, based on inputs * weights
     public void calculateInnerPotential(double[] inputs){
         double sum = 0.0;
-        for(int i = 0; i < inputs.length; i++){
+        for(int i = 0; i < weights.length; i++){
             //Input for bias
             if(i == 0){
                 sum += 1.0 * weights[i];
             }
             else{
-                sum += inputs[i] * weights[i];
+                sum += inputs[i-1] * weights[i];
             }
         }
         innerPotential = sum;
