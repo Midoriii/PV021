@@ -6,9 +6,6 @@ import lombok.Setter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -50,13 +47,6 @@ public class Network {
         testLabels = new int[testImagesCount];
         trainLabelsOneHot = new int[trainImagesCount][categories];
         testLabelsOneHot = new int[testImagesCount][categories];
-        /*
-        trainImages = new double[4][2];
-        testImages = new double[4][2];
-        trainLabels = new int[4];
-        testLabels = new int[4];
-        trainLabelsOneHot = new int[4][categories];
-        testLabelsOneHot = new int[4][categories];*/
 
         trainPredictions = new int[trainImagesCount];
         testPredictions = new int[testImagesCount];
@@ -101,8 +91,6 @@ public class Network {
                     System.out.println("Output " + l + ": " + outputLayer.getOutputs()[l]);
                 }
             }*/
-
-
             trainPredictions[i] = getPredictedLabel();
         }
         System.out.println("loss: " + loss_sum / trainImages.length);
@@ -381,20 +369,20 @@ public class Network {
         }
     }
 
-    //Backpropagation algorithm TODO
+    //Backpropagation algorithm TODO: make it work
     public void backprop(int imageNumber){
         //for each output neuron i
         for(int i = 0; i < outputLayer.getNeurons().size(); i++){
-            //derivative = (softmax_i - true_one_hot_i) * softmax_i * (1 - softmax_i)
-            outputLayer.getDerivatives()[i] = (outputLayer.getOutputs()[i] - (double) trainLabelsOneHot[imageNumber][i]) * outputLayer.getOutputs()[i] * (1.0 - outputLayer.getOutputs()[i]);
+            //error_gradient = (softmax_i - true_one_hot_i) * softmax_i * (1 - softmax_i)
+            outputLayer.getLocalErrorGradients()[i] = (outputLayer.getOutputs()[i] - (double) trainLabelsOneHot[imageNumber][i]) * outputLayer.getOutputs()[i] * (1.0 - outputLayer.getOutputs()[i]);
             //for each his weight n (for weight_0 input is 1.0)
             for(int n = 0; n < outputLayer.getNeurons().get(i).getWeights().length; n++){
-                //delta weight = learning_rate * derivative * input_n
+                //delta weight = learning_rate * error_gradient * input_n
                 if(n == 0){
-                    outputLayer.getNeurons().get(i).getDeltaWeights()[n] = learningRate * outputLayer.getDerivatives()[i] * 1.0;
+                    outputLayer.getNeurons().get(i).getDeltaWeights()[n] = learningRate * outputLayer.getLocalErrorGradients()[i] * 1.0;
                 }
                 else{
-                    outputLayer.getNeurons().get(i).getDeltaWeights()[n] = learningRate * outputLayer.getDerivatives()[i] * outputLayer.getInputs()[n-1];
+                    outputLayer.getNeurons().get(i).getDeltaWeights()[n] = learningRate * outputLayer.getLocalErrorGradients()[i] * outputLayer.getInputs()[n-1];
                 }
             }
         }
@@ -403,37 +391,37 @@ public class Network {
         for(int l = hiddenLayers.size() - 1; l >= 0; l--){
             //for each hidden neuron i
             for(int i = 0; i < hiddenLayers.get(l).getNeurons().size(); i++){
-                double derivatives_sum = 0.0;
+                double localErrorGradientsSum = 0.0;
                 //for each neuron j up a layer
                 if(l == hiddenLayers.size() - 1){
-                    //prev_derivatives_sum += prev_layer_derivative * j's_weight_i+1
+                    //prev_error_gradients_sum += prev_error_gradient * j's_weight_i+1
                     for(int j = 0; j < outputLayer.getNeurons().size(); j++){
-                        derivatives_sum += (outputLayer.getDerivatives()[j] * outputLayer.getNeurons().get(j).getWeights()[i+1]);
+                        localErrorGradientsSum += (outputLayer.getLocalErrorGradients()[j] * outputLayer.getNeurons().get(j).getWeights()[i+1]);
                     }
                 }
                 else{
-                    //prev_derivatives_sum += prev_layer_derivative * j's_weight_i+1
+                    //prev_error_gradients_sum += prev_error_gradient * j's_weight_i+1
                     for(int j = 0; j < hiddenLayers.get(l + 1).getNeurons().size(); j++){
-                        derivatives_sum += (hiddenLayers.get(l + 1).getDerivatives()[j] * hiddenLayers.get(l + 1).getNeurons().get(j).getWeights()[i+1]);
+                        localErrorGradientsSum += (hiddenLayers.get(l + 1).getLocalErrorGradients()[j] * hiddenLayers.get(l + 1).getNeurons().get(j).getWeights()[i+1]);
                     }
                 }
-                //derivative = prev_derivatives_sum * act_function_derivative
-                hiddenLayers.get(l).getDerivatives()[i] = derivatives_sum * hiddenLayers.get(l).getNeurons().get(i).reluPrime();
+                //error_gradient = prev_error_gradients_sum * act_function_derivative
+                hiddenLayers.get(l).getLocalErrorGradients()[i] = localErrorGradientsSum * hiddenLayers.get(l).getNeurons().get(i).reluPrime();
                 //for each his weight n
                 for(int n = 0; n < hiddenLayers.get(l).getNeurons().get(i).getWeights().length; n++){
-                    //delta weight = derivative * input_n * learning_rate
+                    //delta weight = error_gradient * input_n * learning_rate
                     if(n == 0){
-                        hiddenLayers.get(l).getNeurons().get(i).getDeltaWeights()[n] = learningRate * hiddenLayers.get(l).getDerivatives()[i] * 1.0;
+                        hiddenLayers.get(l).getNeurons().get(i).getDeltaWeights()[n] = learningRate * hiddenLayers.get(l).getLocalErrorGradients()[i] * 1.0;
                     }
                     else{
-                        hiddenLayers.get(l).getNeurons().get(i).getDeltaWeights()[n] = learningRate * hiddenLayers.get(l).getDerivatives()[i] * hiddenLayers.get(l).getInputs()[n-1];
+                        hiddenLayers.get(l).getNeurons().get(i).getDeltaWeights()[n] = learningRate * hiddenLayers.get(l).getLocalErrorGradients()[i] * hiddenLayers.get(l).getInputs()[n-1];
                     }
                 }
             }
         }
     }
 
-    //Update weights, along with momentum and weight decay TODO
+    //Update weights, along with momentum and weight decay TODO: weight decay
     public void updateWeights(){
         //for each output layer neuron
         for(int i = 0; i < outputLayer.getNeurons().size(); i++){
@@ -473,7 +461,7 @@ public class Network {
         return predictionIndex;
     }
 
-    //Print predictions as required TODO
+    //Print predictions as required TODO: expected too ?
     public void printPredictions(){
         try {
             PrintWriter testPredictionswriter = new PrintWriter("actualTestPredictions", "UTF-8");

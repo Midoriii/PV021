@@ -6,9 +6,9 @@ public class NeuralNetworksProject {
     public static void main(String [] args){
 
         //Number of input neurons, hidden layers
-        int inputDimensions = 784; //2
-        int trainImagesCount = 60000; //4
-        int testImagesCount = 10000; //4
+        int inputDimensions = 784;
+        int trainImagesCount = 60000;
+        int testImagesCount = 10000;
         int hiddenLayersCount = 2;
 
         //How many epochs
