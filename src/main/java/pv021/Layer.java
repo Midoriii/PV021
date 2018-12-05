@@ -21,7 +21,8 @@ public class Layer {
         localErrorGradients = new double[neuronCount];
 
         for(int i = 0; i < neuronCount; i++){
-            neurons.add(new Neuron(prevLayerNeuronsCount));
+            //+1 for bias
+            neurons.add(new Neuron(prevLayerNeuronsCount + 1));
         }
         //Prep the outputs
         for(int i = 0; i < neuronCount; i++){

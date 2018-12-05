@@ -20,13 +20,13 @@ public class Neuron {
     private double leakyReluCoef = 20.0;
 
 
-    //Create proper number of weights, +1 is because of the bias
+    //Create proper number of weights,
     public Neuron(int numberOfWeights){
-        weights = new double[numberOfWeights + 1];
-        deltaWeights = new double[numberOfWeights + 1];
-        prevDeltaWeights = new double[numberOfWeights + 1];
+        weights = new double[numberOfWeights];
+        deltaWeights = new double[numberOfWeights];
+        prevDeltaWeights = new double[numberOfWeights];
 
-        for(int i = 0; i < numberOfWeights + 1; i++){
+        for(int i = 0; i < numberOfWeights; i++){
             weights[i] = addWeight(numberOfWeights);
         }
     }
