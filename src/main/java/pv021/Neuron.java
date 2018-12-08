@@ -69,21 +69,21 @@ public class Neuron {
     }
 
     //Softmax activation
-    public double softmax(ArrayList<Neuron> outputNeurons){
+    public double softmax(Neuron[] outputNeurons){
         //Calculate the sum of e^(inner potential) of all output neurons
         double sum = 0.0;
 
         //To stabilise the softmax, we need to find and subtract the max value
         ArrayList<Double> innerPotentials = new ArrayList<Double>();
-        for(int i = 0; i < outputNeurons.size(); i++){
-            innerPotentials.add(outputNeurons.get(i).getInnerPotential());
+        for(int i = 0; i < outputNeurons.length; i++){
+            innerPotentials.add(outputNeurons[i].getInnerPotential());
         }
 
         //The maximum
         double max = Collections.max(innerPotentials);
 
-        for(int i = 0; i < outputNeurons.size(); i++){
-            sum += Math.exp(outputNeurons.get(i).getInnerPotential() - max);
+        for(int i = 0; i < outputNeurons.length; i++){
+            sum += Math.exp(outputNeurons[i].getInnerPotential() - max);
         }
         //Return the softmax and set the output of this neuron
         output = Math.exp(innerPotential - max) / sum;

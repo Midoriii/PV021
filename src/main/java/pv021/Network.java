@@ -18,10 +18,10 @@ public class Network {
     private double decayRate = 0.0005;
     private double learningRate = 0.000001;
 
-    private int categories = 10; //2
+    private int categories = 10;
 
     private Layer inputLayer;
-    private ArrayList<Layer> hiddenLayers = new ArrayList<Layer>();
+    private Layer[] hiddenLayers;
     private Layer outputLayer;
 
     private double[][] trainImages;
@@ -51,15 +51,17 @@ public class Network {
         trainPredictions = new int[trainImagesCount];
         testPredictions = new int[testImagesCount];
 
+        hiddenLayers = new Layer[hiddenLayersCount];
+
         //Create desired layers
         inputLayer = new Layer(1, inputDimensions);
         for(int i = 0; i < hiddenLayersCount; i++){
             //First hidden layer has the weights number equal to the neurons in input layer
             if(i == 0){
-                hiddenLayers.add(new Layer(inputDimensions, hiddenLayersNeuronCount.get(i)));
+                hiddenLayers[i] = new Layer(inputDimensions, hiddenLayersNeuronCount.get(i));
             }
             else{
-                hiddenLayers.add(new Layer(hiddenLayersNeuronCount.get(i-1), hiddenLayersNeuronCount.get(i)));
+                hiddenLayers[i] = new Layer(hiddenLayersNeuronCount.get(i-1), hiddenLayersNeuronCount.get(i));
             }
             //Output layer has the number of weights equal to the number of neurons in the last hidden layer
         outputLayer = new Layer(hiddenLayersNeuronCount.get(hiddenLayersNeuronCount.size() - 1), categories);
@@ -112,22 +114,22 @@ public class Network {
     public void forwardPass(){
 
         //Pass the previous outputs into current inputs, calculate activation, pass the outputs
-        for(int i = 0; i < hiddenLayers.size(); i++){
+        for(int i = 0; i < hiddenLayers.length; i++){
 
             //Set the inputs to the previous layer's outputs
             if(i == 0){
-                hiddenLayers.get(i).setInputs(inputLayer.getOutputs());
+                hiddenLayers[i].setInputs(inputLayer.getOutputs());
             }
             else{
-                hiddenLayers.get(i).setInputs(hiddenLayers.get(i-1).getOutputs());
+                hiddenLayers[i].setInputs(hiddenLayers[i-1].getOutputs());
             }
 
             //Calculate new output
-            hiddenLayers.get(i).calculateOutputs("Relu");
+            hiddenLayers[i].calculateOutputs("Relu");
         }
 
         //Calculate output Layer outputs
-        outputLayer.setInputs(hiddenLayers.get(hiddenLayers.size()-1).getOutputs());
+        outputLayer.setInputs(hiddenLayers[hiddenLayers.length-1].getOutputs());
         outputLayer.calculateOutputs("Softmax");
     }
 
@@ -372,49 +374,49 @@ public class Network {
     //Backpropagation algorithm TODO: make it work
     public void backprop(int imageNumber){
         //for each output neuron i
-        for(int i = 0; i < outputLayer.getNeurons().size(); i++){
+        for(int i = 0; i < outputLayer.getNeurons().length; i++){
             //error_gradient = (softmax_i - true_one_hot_i) * softmax_i * (1 - softmax_i)
             outputLayer.getLocalErrorGradients()[i] = (outputLayer.getOutputs()[i] - (double) trainLabelsOneHot[imageNumber][i]) * outputLayer.getOutputs()[i] * (1.0 - outputLayer.getOutputs()[i]);
             //for each his weight n (for weight_0 input is 1.0)
-            for(int n = 0; n < outputLayer.getNeurons().get(i).getWeights().length; n++){
+            for(int n = 0; n < outputLayer.getNeurons()[i].getWeights().length; n++){
                 //delta weight = learning_rate * error_gradient * input_n
                 if(n == 0){
-                    outputLayer.getNeurons().get(i).getDeltaWeights()[n] = learningRate * outputLayer.getLocalErrorGradients()[i] * 1.0;
+                    outputLayer.getNeurons()[i].getDeltaWeights()[n] = learningRate * outputLayer.getLocalErrorGradients()[i] * 1.0;
                 }
                 else{
-                    outputLayer.getNeurons().get(i).getDeltaWeights()[n] = learningRate * outputLayer.getLocalErrorGradients()[i] * outputLayer.getInputs()[n-1];
+                    outputLayer.getNeurons()[i].getDeltaWeights()[n] = learningRate * outputLayer.getLocalErrorGradients()[i] * outputLayer.getInputs()[n-1];
                 }
             }
         }
 
         //for each hidden layer (from the top)
-        for(int l = hiddenLayers.size() - 1; l >= 0; l--){
+        for(int l = hiddenLayers.length - 1; l >= 0; l--){
             //for each hidden neuron i
-            for(int i = 0; i < hiddenLayers.get(l).getNeurons().size(); i++){
+            for(int i = 0; i < hiddenLayers[l].getNeurons().length; i++){
                 double localErrorGradientsSum = 0.0;
                 //for each neuron j up a layer
-                if(l == hiddenLayers.size() - 1){
+                if(l == hiddenLayers.length - 1){
                     //prev_error_gradients_sum += prev_error_gradient * j's_weight_i+1
-                    for(int j = 0; j < outputLayer.getNeurons().size(); j++){
-                        localErrorGradientsSum += (outputLayer.getLocalErrorGradients()[j] * outputLayer.getNeurons().get(j).getWeights()[i+1]);
+                    for(int j = 0; j < outputLayer.getNeurons().length; j++){
+                        localErrorGradientsSum += (outputLayer.getLocalErrorGradients()[j] * outputLayer.getNeurons()[j].getWeights()[i+1]);
                     }
                 }
                 else{
                     //prev_error_gradients_sum += prev_error_gradient * j's_weight_i+1
-                    for(int j = 0; j < hiddenLayers.get(l + 1).getNeurons().size(); j++){
-                        localErrorGradientsSum += (hiddenLayers.get(l + 1).getLocalErrorGradients()[j] * hiddenLayers.get(l + 1).getNeurons().get(j).getWeights()[i+1]);
+                    for(int j = 0; j < hiddenLayers[l + 1].getNeurons().length; j++){
+                        localErrorGradientsSum += (hiddenLayers[l + 1].getLocalErrorGradients()[j] * hiddenLayers[l + 1].getNeurons()[j].getWeights()[i+1]);
                     }
                 }
                 //error_gradient = prev_error_gradients_sum * act_function_derivative
-                hiddenLayers.get(l).getLocalErrorGradients()[i] = localErrorGradientsSum * hiddenLayers.get(l).getNeurons().get(i).reluPrime();
+                hiddenLayers[l].getLocalErrorGradients()[i] = localErrorGradientsSum * hiddenLayers[l].getNeurons()[i].reluPrime();
                 //for each his weight n
-                for(int n = 0; n < hiddenLayers.get(l).getNeurons().get(i).getWeights().length; n++){
+                for(int n = 0; n < hiddenLayers[l].getNeurons()[i].getWeights().length; n++){
                     //delta weight = error_gradient * input_n * learning_rate
                     if(n == 0){
-                        hiddenLayers.get(l).getNeurons().get(i).getDeltaWeights()[n] = learningRate * hiddenLayers.get(l).getLocalErrorGradients()[i] * 1.0;
+                        hiddenLayers[l].getNeurons()[i].getDeltaWeights()[n] = learningRate * hiddenLayers[l].getLocalErrorGradients()[i] * 1.0;
                     }
                     else{
-                        hiddenLayers.get(l).getNeurons().get(i).getDeltaWeights()[n] = learningRate * hiddenLayers.get(l).getLocalErrorGradients()[i] * hiddenLayers.get(l).getInputs()[n-1];
+                        hiddenLayers[l].getNeurons()[i].getDeltaWeights()[n] = learningRate * hiddenLayers[l].getLocalErrorGradients()[i] * hiddenLayers[l].getInputs()[n-1];
                     }
                 }
             }
@@ -424,22 +426,22 @@ public class Network {
     //Update weights, along with momentum and weight decay TODO: weight decay
     public void updateWeights(){
         //for each output layer neuron
-        for(int i = 0; i < outputLayer.getNeurons().size(); i++){
+        for(int i = 0; i < outputLayer.getNeurons().length; i++){
             //for each weight
-            for(int j = 0; j < outputLayer.getNeurons().get(i).getWeights().length; j++){
+            for(int j = 0; j < outputLayer.getNeurons()[i].getWeights().length; j++){
                 //weight += delta_weight + momentum * prev_delta_weight
-                outputLayer.getNeurons().get(i).getWeights()[j] += outputLayer.getNeurons().get(i).getDeltaWeights()[j] + (momentum * outputLayer.getNeurons().get(i).getPrevDeltaWeights()[j]);
+                outputLayer.getNeurons()[i].getWeights()[j] += outputLayer.getNeurons()[i].getDeltaWeights()[j] + (momentum * outputLayer.getNeurons()[i].getPrevDeltaWeights()[j]);
                 //prev_delta_weight = delta_weight;
-                outputLayer.getNeurons().get(i).getPrevDeltaWeights()[j] = outputLayer.getNeurons().get(i).getDeltaWeights()[j];
+                outputLayer.getNeurons()[i].getPrevDeltaWeights()[j] = outputLayer.getNeurons()[i].getDeltaWeights()[j];
             }
 
         }
         //the same for each hidden layer
-        for(int l = 0; l < hiddenLayers.size(); l++){
-            for(int i = 0; i < hiddenLayers.get(l).getNeurons().size(); i++){
-                for(int j = 0; j < hiddenLayers.get(l).getNeurons().get(i).getWeights().length; j++){
-                    hiddenLayers.get(l).getNeurons().get(i).getWeights()[j] += hiddenLayers.get(l).getNeurons().get(i).getDeltaWeights()[j] + (momentum * hiddenLayers.get(l).getNeurons().get(i).getPrevDeltaWeights()[j]);
-                    hiddenLayers.get(l).getNeurons().get(i).getPrevDeltaWeights()[j] = hiddenLayers.get(l).getNeurons().get(i).getDeltaWeights()[j];
+        for(int l = 0; l < hiddenLayers.length; l++){
+            for(int i = 0; i < hiddenLayers[l].getNeurons().length; i++){
+                for(int j = 0; j < hiddenLayers[l].getNeurons()[i].getWeights().length; j++){
+                    hiddenLayers[l].getNeurons()[i].getWeights()[j] += hiddenLayers[l].getNeurons()[i].getDeltaWeights()[j] + (momentum * hiddenLayers[l].getNeurons()[i].getPrevDeltaWeights()[j]);
+                    hiddenLayers[l].getNeurons()[i].getPrevDeltaWeights()[j] = hiddenLayers[l].getNeurons()[i].getDeltaWeights()[j];
                 }
             }
         }

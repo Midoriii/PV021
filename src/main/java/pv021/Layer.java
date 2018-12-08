@@ -12,17 +12,18 @@ public class Layer {
     private double[] inputs;
     private double[] outputs;
     private double[] localErrorGradients;
-    private ArrayList<Neuron> neurons = new ArrayList<Neuron>();
+    private Neuron[] neurons;
 
 
     public Layer(int prevLayerNeuronsCount, int neuronCount){
         inputs = new double[prevLayerNeuronsCount];
         outputs = new double[neuronCount];
         localErrorGradients = new double[neuronCount];
+        neurons = new Neuron[neuronCount];
 
         for(int i = 0; i < neuronCount; i++){
             //+1 for bias
-            neurons.add(new Neuron(prevLayerNeuronsCount + 1));
+            neurons[i] = new Neuron(prevLayerNeuronsCount + 1);
         }
         //Prep the outputs
         for(int i = 0; i < neuronCount; i++){
@@ -34,21 +35,21 @@ public class Layer {
     public void calculateOutputs(String function){
 
         //For each neuron in this layer
-        for(int i = 0; i < neurons.size(); i++){
+        for(int i = 0; i < neurons.length; i++){
             //Let the neuron calculate its inner potential
-            neurons.get(i).calculateInnerPotential(inputs);
+            neurons[i].calculateInnerPotential(inputs);
         }
 
-        for(int i = 0; i < neurons.size(); i++){
+        for(int i = 0; i < neurons.length; i++){
 
             //If the neuron is in hidden layer, relu its inner potential
             if(function.equals("Relu")){
                 //Set other outputs
-                outputs[i] = neurons.get(i).relu();
+                outputs[i] = neurons[i].relu();
             }
             //Else it is in output layer and we use softmax
             else{
-                outputs[i] = neurons.get(i).softmax(neurons);
+                outputs[i] = neurons[i].softmax(neurons);
             }
 
         }
