@@ -68,6 +68,11 @@ public class Neuron {
         }
     }
 
+    //Sigmoid activation
+    public double sigmoid(){
+        return 1.0/(1.0 + (Math.exp(-innerPotential)));
+    }
+
     //Softmax activation
     public double softmax(Neuron[] outputNeurons){
         //Calculate the sum of e^(inner potential) of all output neurons

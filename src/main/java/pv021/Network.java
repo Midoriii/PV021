@@ -16,7 +16,7 @@ public class Network {
     //Hyper-parameters
     private double momentum = 0.9;
     private double decayRate = 0.0005;
-    private double learningRate = 0.000001;
+    private double learningRate = 0.0001;
 
     private int categories = 10;
 
@@ -130,16 +130,23 @@ public class Network {
 
         //Calculate output Layer outputs
         outputLayer.setInputs(hiddenLayers[hiddenLayers.length-1].getOutputs());
-        outputLayer.calculateOutputs("Softmax");
+        outputLayer.calculateOutputs("Sigmoid");
     }
 
     //Cross-Entropy error function, without L2 regularization which is ensured by weight decay
     public void calculateError(int imageNumber){
-        double sum = 0.0;
+        /*double sum = 0.0;
         for(int i = 0; i < outputLayer.getOutputs().length; i++){
             sum += Math.log(outputLayer.getOutputs()[i]) * trainLabelsOneHot[imageNumber][i];
         }
-        loss = -1.0 * sum;
+        loss = -1.0 * sum;*/
+
+        //MSE
+        double sum = 0.0;
+        for(int i = 0; i < outputLayer.getOutputs().length; i++){
+            sum += Math.pow(trainLabelsOneHot[imageNumber][i] - outputLayer.getOutputs()[i], 2);
+        }
+        loss = sum/2.0;
     }
 
     //Feed image array to the input layer
@@ -376,7 +383,7 @@ public class Network {
         //for each output neuron i
         for(int i = 0; i < outputLayer.getNeurons().length; i++){
             //error_gradient = (softmax_i - true_one_hot_i) * softmax_i * (1 - softmax_i)
-            outputLayer.getLocalErrorGradients()[i] = (outputLayer.getOutputs()[i] - (double) trainLabelsOneHot[imageNumber][i]) * outputLayer.getOutputs()[i] * (1.0 - outputLayer.getOutputs()[i]);
+            outputLayer.getLocalErrorGradients()[i] = ((double) trainLabelsOneHot[imageNumber][i] - outputLayer.getOutputs()[i]) * outputLayer.getOutputs()[i] * (1.0 - outputLayer.getOutputs()[i]);
             //for each his weight n (for weight_0 input is 1.0)
             for(int n = 0; n < outputLayer.getNeurons()[i].getWeights().length; n++){
                 //delta weight = learning_rate * error_gradient * input_n
@@ -429,8 +436,10 @@ public class Network {
         for(int i = 0; i < outputLayer.getNeurons().length; i++){
             //for each weight
             for(int j = 0; j < outputLayer.getNeurons()[i].getWeights().length; j++){
+                //new delta with momentum
+                outputLayer.getNeurons()[i].getDeltaWeights()[j] += momentum * outputLayer.getNeurons()[i].getPrevDeltaWeights()[j];
                 //weight += delta_weight + momentum * prev_delta_weight
-                outputLayer.getNeurons()[i].getWeights()[j] += outputLayer.getNeurons()[i].getDeltaWeights()[j] + (momentum * outputLayer.getNeurons()[i].getPrevDeltaWeights()[j]);
+                outputLayer.getNeurons()[i].getWeights()[j] += outputLayer.getNeurons()[i].getDeltaWeights()[j];
                 //prev_delta_weight = delta_weight;
                 outputLayer.getNeurons()[i].getPrevDeltaWeights()[j] = outputLayer.getNeurons()[i].getDeltaWeights()[j];
             }
@@ -440,7 +449,8 @@ public class Network {
         for(int l = 0; l < hiddenLayers.length; l++){
             for(int i = 0; i < hiddenLayers[l].getNeurons().length; i++){
                 for(int j = 0; j < hiddenLayers[l].getNeurons()[i].getWeights().length; j++){
-                    hiddenLayers[l].getNeurons()[i].getWeights()[j] += hiddenLayers[l].getNeurons()[i].getDeltaWeights()[j] + (momentum * hiddenLayers[l].getNeurons()[i].getPrevDeltaWeights()[j]);
+                    hiddenLayers[l].getNeurons()[i].getDeltaWeights()[j] += momentum * hiddenLayers[l].getNeurons()[i].getPrevDeltaWeights()[j];
+                    hiddenLayers[l].getNeurons()[i].getWeights()[j] += hiddenLayers[l].getNeurons()[i].getDeltaWeights()[j];
                     hiddenLayers[l].getNeurons()[i].getPrevDeltaWeights()[j] = hiddenLayers[l].getNeurons()[i].getDeltaWeights()[j];
                 }
             }

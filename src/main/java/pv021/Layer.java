@@ -47,6 +47,9 @@ public class Layer {
                 //Set other outputs
                 outputs[i] = neurons[i].relu();
             }
+            else if(function.equals("Sigmoid")){
+                outputs[i] = neurons[i].sigmoid();
+            }
             //Else it is in output layer and we use softmax
             else{
                 outputs[i] = neurons[i].softmax(neurons);
