@@ -52,6 +52,8 @@ public class NeuralNetworksProject {
 
         Net.predict();
 
+        Net.printPredictions();
+
 
 
         //DEBUG
