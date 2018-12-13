@@ -16,7 +16,7 @@ public class Network {
     //Hyper-parameters
     private double momentum = 0.9;
     private double decayRate = 0.0005;
-    private double learningRate = 0.0001;
+    private double learningRate = 0.001;
 
     private int categories = 10;
 
@@ -25,30 +25,40 @@ public class Network {
     private Layer outputLayer;
 
     private double[][] trainImages;
+    private double[][] validateImages;
     private double[][] testImages;
     private int[] trainLabels;
+    private int[] validateLabels;
     private int[] testLabels;
     private int[][] trainLabelsOneHot;
+    private int[][] validateLabelsOneHot;
     //Are test really needed though
     private int[][] testLabelsOneHot;
 
     private int[] trainPredictions;
+    private int[] validatePredictions;
     private int[] testPredictions;
+
+    double validationAccuracy = 0.0;
 
     double loss;
     double loss_sum;
 
 
     //Init layers and arrays in constructor
-    public Network(int inputDimensions, int trainImagesCount, int testImagesCount, int hiddenLayersCount, ArrayList<Integer> hiddenLayersNeuronCount){
+    public Network(int inputDimensions, int trainImagesCount, int validateImagesCount, int testImagesCount, int hiddenLayersCount, ArrayList<Integer> hiddenLayersNeuronCount){
         trainImages = new double[trainImagesCount][inputDimensions];
+        validateImages = new double[validateImagesCount][inputDimensions];
         testImages = new double[testImagesCount][inputDimensions];
         trainLabels = new int[trainImagesCount];
+        validateLabels = new int[validateImagesCount];
         testLabels = new int[testImagesCount];
         trainLabelsOneHot = new int[trainImagesCount][categories];
+        validateLabelsOneHot = new int[validateImagesCount][categories];
         testLabelsOneHot = new int[testImagesCount][categories];
 
         trainPredictions = new int[trainImagesCount];
+        validatePredictions = new int[validateImagesCount];
         testPredictions = new int[testImagesCount];
 
         hiddenLayers = new Layer[hiddenLayersCount];
@@ -108,6 +118,27 @@ public class Network {
             //Keep a record of predictions
             testPredictions[i] = getPredictedLabel();
         }
+        double testCorrect = 0.0;
+        for(int i = 0; i < testPredictions.length; i++){
+            if(testPredictions[i] == testLabels[i]){
+                testCorrect++;
+            }
+        }
+        System.out.println("-----------------------------------------------------------");
+        System.out.println("Test accuracy: " + testCorrect/testPredictions.length * 100.0 + "%.");
+        System.out.println("-----------------------------------------------------------");
+    }
+
+    //Prediction loop, implicitly predicts on the whole validation set TODO
+    public void validation(){
+        for(int i = 0; i < validateImages.length; i++){
+            //Feed input to the input layer
+            getInput(i, "validation");
+            //Calculate forward pass
+            forwardPass();
+            //Keep a record of predictions
+            validatePredictions[i] = getPredictedLabel();
+        }
     }
 
     //Forward pass
@@ -156,9 +187,12 @@ public class Network {
             //inputLayer.setInputs(testImages[imageNumber]);
             inputLayer.setOutputs(testImages[imageNumber]);
         }
-        else{
+        else if(test.equals("train")){
             //inputLayer.setInputs(trainImages[imageNumber]);
             inputLayer.setOutputs(trainImages[imageNumber]);
+        }
+        else if(test.equals("validation")){
+            inputLayer.setOutputs(validateImages[imageNumber]);
         }
     }
 
@@ -168,48 +202,16 @@ public class Network {
         String mnistTestVectors = "mnist/mnist_test_vectors.csv";
         String mnistTrainLabels = "mnist/mnist_train_labels.csv";
         String mnistTestLabels = "mnist/mnist_test_labels.csv";
-        /*
-        trainImages[1][0] = 1.0;
-        trainImages[1][1] = 1.0;
 
-        trainImages[2][0] = 1.0;
-        trainImages[2][1] = 0.0;
-
-        trainImages[3][0] = 0.0;
-        trainImages[3][1] = 0.0;
-
-        trainImages[0][0] = 0.0;
-        trainImages[0][1] = 1.0;
-
-        testImages[1][0] = 1.0;
-        testImages[1][1] = 1.0;
-
-        testImages[2][0] = 1.0;
-        testImages[2][1] = 0.0;
-
-        testImages[3][0] = 0.0;
-        testImages[3][1] = 0.0;
-
-        testImages[0][0] = 0.0;
-        testImages[0][1] = 1.0;
-
-        trainLabels[0] = 1;
-        trainLabels[1] = 0;
-        trainLabels[2] = 1;
-        trainLabels[3] = 0;
-
-        testLabels[0] = 1;
-        testLabels[1] = 0;
-        testLabels[2] = 1;
-        testLabels[3] = 0;
-
-        */
         trainImages = parseVectors(mnistTrainVectors, "train");
+        validateImages = parseVectors(mnistTrainVectors, "validate");
         testImages = parseVectors(mnistTestVectors, "test");
         trainLabels = parseLabels(mnistTrainLabels, "train");
+        validateLabels = parseLabels(mnistTrainLabels, "validate");
         testLabels = parseLabels(mnistTestLabels, "test");
 
         trainLabelsOneHot = mapOneHotLabels(trainLabels, "train");
+        validateLabelsOneHot = mapOneHotLabels(validateLabels, "validate");
         testLabelsOneHot = mapOneHotLabels(testLabels, "test");
     }
 
@@ -218,11 +220,14 @@ public class Network {
         String line;
         String cvsSplitBy = ",";
         double[][] vector;
-        if(type != "test"){
-            vector = new double[trainImages.length][trainImages[0].length];
+        if(type == "test"){
+            vector = new double[testImages.length][testImages[0].length];
+        }
+        else if(type == "validate"){
+            vector = new double[validateImages.length][validateImages[0].length];
         }
         else{
-            vector = new double[testImages.length][testImages[0].length];
+            vector = new double[trainImages.length][trainImages[0].length];
         }
 
         //Get file from resources folder
@@ -238,9 +243,23 @@ public class Network {
                 //Split the line
                 String[] addition = line.split(cvsSplitBy);
 
-                //Parse strings into doubles and add the single image into the set
-                for(int i = 0; i < addition.length; i++){
-                    vector[j][i] = (Double.parseDouble(addition[i]));
+                if(j >= trainImages.length && type == "validate"){
+                    //Parse strings into doubles and add the single image into the set
+                    for(int i = 0; i < addition.length; i++){
+                        vector[j-trainImages.length][i] = (Double.parseDouble(addition[i]));
+                    }
+                }
+                if(j < trainImages.length && type == "train"){
+                    //Parse strings into doubles and add the single image into the set
+                    for(int i = 0; i < addition.length; i++){
+                        vector[j][i] = (Double.parseDouble(addition[i]));
+                    }
+                }
+                else if(type == "test"){
+                    //Parse strings into doubles and add the single image into the set
+                    for(int i = 0; i < addition.length; i++){
+                        vector[j][i] = (Double.parseDouble(addition[i]));
+                    }
                 }
 
                 j++;
@@ -256,11 +275,14 @@ public class Network {
     private int[] parseLabels(String path, String type){
         String line;
         int[] vector;
-        if(type != "test"){
-            vector = new int[trainImages.length];
+        if(type == "test"){
+            vector = new int[testImages.length];
+        }
+        else if(type == "validate"){
+            vector = new int[validateImages.length];
         }
         else{
-            vector = new int[testImages.length];
+            vector = new int[trainImages.length];
         }
 
         //Get file from resources folder
@@ -273,7 +295,15 @@ public class Network {
                 //Read line
                 line = scanner.nextLine();
 
-                vector[i] = (Integer.parseInt(line));
+                if(type == "test"){
+                    vector[i] = (Integer.parseInt(line));
+                }
+                else if(type == "validate" && i >= trainImages.length){
+                    vector[i-trainImages.length] = (Integer.parseInt(line));
+                }
+                else if(type == "train" && i < trainImages.length){
+                    vector[i] = (Integer.parseInt(line));
+                }
 
                 i++;
             }
@@ -288,11 +318,14 @@ public class Network {
     //Map labels to one hot variant
     private int[][] mapOneHotLabels(int[] labels, String type){
         int[][] oneHot;
-        if(type != "test"){
-            oneHot = new int [trainImages.length][categories];
+        if(type == "test"){
+            oneHot = new int[testImages.length][categories];
+        }
+        else if(type == "validate"){
+            oneHot = new int[validateImages.length][categories];
         }
         else{
-            oneHot = new int [testImages.length][categories];
+            oneHot = new int[trainImages.length][categories];
         }
 
         for(int i = 0; i < labels.length; i++){
@@ -502,21 +535,22 @@ public class Network {
     //Print the correctness percentage
     public void printPercentages(){
         double trainCorrect = 0.0;
-        double testCorrect = 0.0;
+        double validateCorrect = 0.0;
 
         for(int i = 0; i < trainPredictions.length; i++){
             if(trainPredictions[i] == trainLabels[i]){
                 trainCorrect++;
             }
         }
-        for(int i = 0; i < testPredictions.length; i++){
-            if(testPredictions[i] == testLabels[i]){
-                testCorrect++;
+        for(int i = 0; i < validatePredictions.length; i++){
+            if(validatePredictions[i] == validateLabels[i]){
+                validateCorrect++;
             }
         }
+        validationAccuracy = validateCorrect/validatePredictions.length * 100.0;
         System.out.println("-----------------------------------------------------------");
         System.out.println("Training accuracy: " + trainCorrect/trainPredictions.length * 100.0 + "%.");
-        System.out.println("Test accuracy: " + testCorrect/testPredictions.length * 100.0 + "%.");
+        System.out.println("Validation accuracy: " + validationAccuracy + "%.");
         System.out.println("-----------------------------------------------------------");
     }
 }

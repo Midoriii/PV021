@@ -7,7 +7,8 @@ public class NeuralNetworksProject {
 
         //Number of input neurons, hidden layers
         int inputDimensions = 784;
-        int trainImagesCount = 60000;
+        int trainImagesCount = 50000;
+        int validateImagesCount = 10000;
         int testImagesCount = 10000;
         int hiddenLayersCount = 2;
 
@@ -22,7 +23,7 @@ public class NeuralNetworksProject {
 
 
         //Create the network
-        Network Net = new Network(inputDimensions, trainImagesCount, testImagesCount, hiddenLayersCount, hiddenLayersNeuronCount);
+        Network Net = new Network(inputDimensions, trainImagesCount, validateImagesCount, testImagesCount, hiddenLayersCount, hiddenLayersNeuronCount);
 
 
         //Read and pre-process the inputs, includes one hot mapping
@@ -35,14 +36,21 @@ public class NeuralNetworksProject {
         for(int i = 0; i < epochs; i++){
             Net.train();
 
-            Net.predict();
+            Net.validation();
 
             Net.printPredictions();
 
             Net.printPercentages();
 
+            //Enough is enough
+            if(Net.validationAccuracy > 96.0){
+                break;
+            }
+
             //Add loss output
         }
+
+        Net.predict();
 
 
 
